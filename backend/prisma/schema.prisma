@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  priceCents  Int
+  stock       Int        @default(100)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+
+  @@map("products")
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  sessionId String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  items     CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  productId String
+  quantity  Int
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@unique([cartId, productId])
+  @@map("cart_items")
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  orderNumber     Int           @unique @default(autoincrement())
+  subtotalCents   Int
+  discountCents   Int           @default(0)
+  totalCents      Int
+  discountCodeId  String?
+  createdAt       DateTime      @default(now())
+  discountCode    DiscountCode? @relation("AppliedDiscount", fields: [discountCodeId], references: [id])
+  earnedDiscount  DiscountCode? @relation("EarnedDiscount")
+  items           OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String  @id @default(cuid())
+  orderId    String
+  productId  String
+  quantity   Int
+  priceCents Int
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product    Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model DiscountCode {
+  id           String    @id @default(cuid())
+  code         String    @unique
+  percentage   Int
+  isUsed       Boolean   @default(false)
+  usedAt       DateTime?
+  earnedByOrderId String? @unique
+  createdAt    DateTime  @default(now())
+  earnedByOrder Order?   @relation("EarnedDiscount", fields: [earnedByOrderId], references: [id])
+  appliedOrders Order[]  @relation("AppliedDiscount")
+
+  @@map("discount_codes")
+}
+
+model StoreStats {
+  id                  Int @id @default(1)
+  totalItemsPurchased Int @default(0)
+  totalRevenueCents   Int @default(0)
+  totalDiscountCents  Int @default(0)
+
+  @@map("store_stats")
+}
