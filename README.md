@@ -1,6 +1,6 @@
 # E-commerce Store
 
-Full-stack TypeScript e-commerce demo with cart, checkout, and a reward-based discount system.
+Full-stack TypeScript e-commerce demo with cart, checkout, and a reward-based discount system. nnnnnnnnnnnnn
 
 ## Stack
 
